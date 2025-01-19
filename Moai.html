@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حساب المقابل المالي</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            background-color: #f1f1f1;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .result p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo">
+        <img src="logo.png" alt="الشعار" width="300">
+    </div>
+
+    <h1>حساب المقابل المالي</h1>
+
+    <form id="costForm">
+        <label for="activity">اختر النشاط:</label>
+        <select id="activity" name="activity" onchange="updateFields()">
+            <option value="none">اختر النشاط</option>
+            <option value="wasteTreatment">معالجة النفايات</option>
+            <option value="nonHazardousWasteCollection">جمع ونقل النفايات غير الخطرة</option>
+            <option value="hazardousWasteCollection">جمع ونقل النفايات الخطرة</option>
+            <option value="wasteStorage">تخزين النفايات</option>
+            <option value="recyclingFacilities">منشآت إعادة التدوير</option>
+            <option value="finalDisposal">التخلص النهائي</option>
+
+        </select>
+        <!-- حقل عدد السنوات -->
+<div id="yearsContainer">
+    <label for="years">عدد السنوات:</label>
+    <select id="years" name="years">
+        <option value="1">سنة</option>
+        <option value="2">سنتين</option>
+        <option value="3">ثلاث سنوات</option>
+    </select>
+</div>
+
+
+        <!-- الأنشطة الفرعية لمعالجة النفايات -->
+        <div id="wasteTreatmentSubActivities" class="hidden">
+            <label for="subActivitiesTreatment">اختر الأنشطة الفرعية:</label>
+            <select id="subActivitiesTreatment" name="subActivitiesTreatment" multiple>
+                <option value="hazardousWaste">معالجة النفايات الخطرة</option>
+                <option value="healthcareWaste">معالجة نفايات الرعاية الصحية الخطرة</option>
+                <option value="asbestosWaste">تفكيك وتغليف نفايات الأسبستوس</option>
+            </select>
+            <label for="capacityTreatment">أدخل السعة القصوى للمعالجة (طن/يوم):</label>
+            <input type="number" id="capacityTreatment" name="capacityTreatment" min="1" placeholder="مثل 1 أو 5 أو 10">
+        </div>
+
+        <!-- الأنشطة الفرعية لجمع ونقل النفايات غير الخطرة -->
+        <div id="nonHazardousSubActivities" class="hidden">
+            <label for="subActivitiesNonHazardous">اختر الأنشطة الفرعية:</label>
+            <select id="subActivitiesNonHazardous" name="subActivitiesNonHazardous" multiple onchange="showVehiclesField('nonHazardous')">
+                <option value="residential">جمع ونقل نفايات المنازل</option>
+                <option value="commercial">جمع ونقل نفايات تجارية وإدارية</option>
+                <option value="marine">جمع ونقل نفايات بحرية</option>
+                <option value="green">جمع ونقل نفايات خضراء</option>
+                <option value="recyclable">جمع ونقل نفايات قابلة لإعادة التدوير</option>
+                <option value="construction">جمع ونقل نفايات الهدم والبناء</option>
+                <option value="inert">جمع ونقل نفايات خاملة</option>
+            </select>
+            <div id="nonHazardousVehicles" class="hidden">
+                <label for="vehiclesNonHazardous">أدخل عدد المركبات لكل نشاط فرعي:</label>
+                <div id="nonHazardousVehicleInputs"></div>
+            </div>
+        </div>
+ <!-- الأنشطة الفرعية لتخزين النفايات -->
+        <div id="wasteStorageSubActivities" class="hidden">
+            <label for="subActivitiesStorage">اختر الأنشطة الفرعية:</label>
+            <select id="subActivitiesStorage" name="subActivitiesStorage">
+                <option value="hazardousWasteStorage">التخزين المؤقت للنفايات الخطرة</option>
+                <option value="recyclableWasteStorage">التخزين المؤقت للنفايات القابلة للتدوير</option>
+            </select>
+            <label for="capacityStorage">أدخل السعة القصوى للتخزين (طن):</label>
+            <input type="number" id="capacityStorage" name="capacityStorage" min="1" placeholder="مثل 1 أو 5 أو 10">
+        </div>
+        <!-- الحقول لأنشطة منشآت إعادة التدوير -->
+        <div id="recyclingFacilitiesInputs" class="hidden">
+            <label for="capitalCost">التكلفة الرأسمالية للمشروع (ريال):</label>
+            <input type="number" id="capitalCost" name="capitalCost" min="0" step="0.01" placeholder="أدخل قيمة التكلفة">
+        </div>
+
+        <!-- الأنشطة الفرعية للتخلص النهائي -->
+        <div id="finalDisposalSubActivities" class="hidden">
+    <label for="subActivitiesFinalDisposal">اختر الأنشطة الفرعية للتخلص النهائي:</label>
+    <select id="subActivitiesFinalDisposal" name="subActivitiesFinalDisposal" multiple>
+        <option value="hazardousWasteDisposal">التخلص النهائي من النفايات الخطرة</option>
+        <option value="hazardousWasteLandfilling">تبطين مرادم النفايات الخطرة</option>
+        <option value="cellClosure">اغلاق الخلايا في المردم</option>
+        <option value="municipalSolidWasteDisposal">التخلص النهائي من النفايات البلدية الصلبة</option>
+        <option value="deadAnimalIncineration">تشغيل محارق الحيوانات النافقة</option>
+    </select>
+    <label for="capacityFinalDisposal">أدخل السعة القصوى (طن/سنة أو كغ/سنة):</label>
+    <input type="number" id="capacityFinalDisposal" name="capacityFinalDisposal" min="1" placeholder="مثل 10000 أو 50000 أو 50">
+      </div>
+
+
+        <!-- الأنشطة الفرعية لجمع ونقل النفايات الخطرة -->
+        <div id="hazardousSubActivities" class="hidden">
+            <label for="subActivitiesHazardous">اختر الأنشطة الفرعية:</label>
+            <select id="subActivitiesHazardous" name="subActivitiesHazardous" multiple onchange="showVehiclesField('hazardous')">
+                <option value="chemical">جمع ونقل نفايات كيميائية</option>
+                <option value="medical">جمع ونقل نفايات طبية</option>
+                <option value="sludge">جمع ونقل الحمأة</option>
+                <option value="oil">جمع ونقل نفايات الزيوت</option>
+                <option value="asbestos">جمع ونقل نفايات الأسبستوس</option>
+                <option value="electronic">جمع ونقل نفايات إلكترونية وكهربائية</option>
+                <option value="battery">جمع ونقل نفايات البطاريات</option>
+                <option value="carbon">جمع ونقل الرماد الكربوني</option>
+                <option value="marineHazardous">جمع ونقل نفايات بحرية خطرة</option>
+            </select>
+            <div id="hazardousVehicles" class="hidden">
+                <label for="vehiclesHazardous">أدخل عدد المركبات لكل نشاط فرعي:</label>
+                <div id="hazardousVehicleInputs"></div>
+            </div>
+        </div>
+
+        <button type="button" onclick="calculateCost()">حساب التكلفة</button>
+    </form>
+
+    <div class="result" id="result" style="display:none;">
+        <p>التكلفة الإجمالية: <span id="totalCost"></span> ريال</p>
+    </div>
+</div>
+
+<script>
+    function updateFields() {
+        const activity = document.getElementById('activity').value;
+        document.getElementById('wasteTreatmentSubActivities').classList.add('hidden');
+        document.getElementById('nonHazardousSubActivities').classList.add('hidden');
+        document.getElementById('hazardousSubActivities').classList.add('hidden');
+        document.getElementById('wasteStorageSubActivities').classList.add('hidden');
+        document.getElementById('recyclingFacilitiesInputs').classList.add('hidden');
+        document.getElementById('finalDisposalSubActivities').classList.add('hidden');
+
+        if (activity === 'wasteTreatment') {
+            document.getElementById('wasteTreatmentSubActivities').classList.remove('hidden');
+        } else if (activity === 'nonHazardousWasteCollection') {
+            document.getElementById('nonHazardousSubActivities').classList.remove('hidden');
+        } else if (activity === 'hazardousWasteCollection') {
+            document.getElementById('hazardousSubActivities').classList.remove('hidden');
+        } else if (activity === 'wasteStorage') {
+            document.getElementById('wasteStorageSubActivities').classList.remove('hidden');
+        } else if (activity === 'recyclingFacilities') {
+            document.getElementById('recyclingFacilitiesInputs').classList.remove('hidden');
+        } else if (activity === 'finalDisposal') {
+            document.getElementById('finalDisposalSubActivities').classList.remove('hidden');
+
+        }
+     }
+
+    function showVehiclesField(type) {
+        if (type === 'nonHazardous') {
+            document.getElementById('nonHazardousVehicles').classList.remove('hidden');
+            generateVehicleInputs('nonHazardous');
+        } else if (type === 'hazardous') {
+            document.getElementById('hazardousVehicles').classList.remove('hidden');
+            generateVehicleInputs('hazardous');
+        }
+    }
+
+    function generateVehicleInputs(type) {
+        const subActivities = type === 'nonHazardous' ? document.getElementById('subActivitiesNonHazardous') : document.getElementById('subActivitiesHazardous');
+        const container = type === 'nonHazardous' ? document.getElementById('nonHazardousVehicleInputs') : document.getElementById('hazardousVehicleInputs');
+        container.innerHTML = '';
+        Array.from(subActivities.selectedOptions).forEach(option => {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.placeholder = `عدد المركبات لنشاط ${option.text}`;
+            input.name = `${type}_${option.value}`;
+            input.min = 1;
+            container.appendChild(input);
+            container.appendChild(document.createElement('br'));
+        });
+    }
+    function calculateCost() {
+   const selectedActivity = document.getElementById('activity').value;
+   const selectedSubActivities = [];
+   let totalCost = 0;
+   let totalVehicles = 0;
+   let maxCostFactor = 0;
+
+   if (!selectedActivity) {
+       alert('الرجاء اختيار النشاط.');
+       return;
+   }
+
+   // Get number of years
+   const years = parseInt(document.getElementById('years').value) || 1;
+
+   // Waste Treatment
+   if (selectedActivity === 'wasteTreatment') {
+       selectedSubActivities.push(
+           ...Array.from(document.getElementById('subActivitiesTreatment').selectedOptions).map(opt => opt.value)
+       );
+
+       const capacity = parseFloat(document.getElementById('capacityTreatment').value);
+       if (isNaN(capacity) || capacity <= 0) {
+           alert('يرجى إدخال سعة صالحة.');
+           return;
+       }
+
+       // First: determine highest risk factor
+       selectedSubActivities.forEach(activity => {
+           let activityCostFactor = capacity < 1 ? 0.8 : (capacity <= 10 ? 1.0 : 1.3);
+           maxCostFactor = Math.max(maxCostFactor, activityCostFactor);
+       });
+
+       // Then calculate using highest risk factor
+       selectedSubActivities.forEach(activity => {
+           totalCost += (30000 * maxCostFactor) * years;
+       });
+   }
+
+   // Non-hazardous waste collection calculation
+   else if (selectedActivity === 'nonHazardousWasteCollection') {
+       // Get selected activities
+       let selectedActivities = Array.from(document.getElementById('subActivitiesNonHazardous').selectedOptions);
+       
+       // Exit if no activities selected
+       if (selectedActivities.length === 0) {
+           alert('الرجاء اختيار نشاط فرعي واحد على الأقل');
+           return;
+       }
+
+       let baseCost = 7500;  // Base cost for all activities
+       let activityCosts = 0;
+       totalVehicles = 0;
+
+       // Calculate for each selected activity
+       for (let activity of selectedActivities) {
+           const vehicleInput = document.querySelector(`[name='nonHazardous_${activity.value}']`);
+           if (!vehicleInput) continue;
+
+           const vehicles = parseInt(vehicleInput.value);
+           if (isNaN(vehicles) || vehicles <= 0) {
+               alert(`الرجاء إدخال عدد صحيح للمركبات لنشاط ${activity.text}`);
+               return;
+           }
+
+           // Add to total vehicles count
+           totalVehicles += vehicles;
+
+           // Determine cost factor based on vehicles
+           let costFactor = 0.8;  // Default for less than 10 vehicles
+           if (vehicles >= 10 && vehicles <= 50) {
+               costFactor = 1.0;
+           } else if (vehicles > 50) {
+               costFactor = 1.3;
+           }
+
+           // Calculate cost for this activity
+           let activityCost = baseCost * costFactor;
+           activityCosts += activityCost;
+       }
+
+       // First multiply the activity costs by number of years
+       let totalBeforeReviewFee = activityCosts * years;
+
+       // Determine review fee based on total vehicles (only added once)
+       let reviewFee = 1000;  // Default for less than 10 vehicles
+       if (totalVehicles >= 10 && totalVehicles <= 50) {
+           reviewFee = 3000;
+       } else if (totalVehicles > 50) {
+           reviewFee = 5000;
+       }
+
+       // Calculate final total
+       totalCost = totalBeforeReviewFee + reviewFee;
+
+       // Set maxCostFactor to prevent additional fixed cost calculation at the end
+       maxCostFactor = -1;
+   }
+
+   // Hazardous Waste Collection
+   else if (selectedActivity === 'hazardousWasteCollection') {
+       // Get selected activities
+       let selectedActivities = Array.from(document.getElementById('subActivitiesHazardous').selectedOptions);
+       
+       // Exit if no activities selected
+       if (selectedActivities.length === 0) {
+           alert('الرجاء اختيار نشاط فرعي واحد على الأقل');
+           return;
+       }
+
+       let baseCost = 10000;  // Base cost for hazardous waste
+       let activityCosts = 0;
+       totalVehicles = 0;
+
+       // Calculate for each selected activity
+       for (let activity of selectedActivities) {
+           const vehicleInput = document.querySelector(`[name='hazardous_${activity.value}']`);
+           if (!vehicleInput) continue;
+
+           const vehicles = parseInt(vehicleInput.value);
+           if (isNaN(vehicles) || vehicles <= 0) {
+               alert(`الرجاء إدخال عدد صحيح للمركبات لنشاط ${activity.text}`);
+               return;
+           }
+
+           // Add to total vehicles count
+           totalVehicles += vehicles;
+
+           // Determine cost factor based on vehicles for hazardous waste
+           let costFactor = 0.8;  // Default for less than 5 vehicles
+           if (vehicles >= 5 && vehicles <= 30) {
+               costFactor = 1.0;
+           } else if (vehicles > 30) {
+               costFactor = 1.3;
+           }
+
+           // Calculate cost for this activity
+           let activityCost = baseCost * costFactor;
+           activityCosts += activityCost;
+       }
+
+       // First multiply the activity costs by number of years
+       let totalBeforeReviewFee = activityCosts * years;
+
+       // Determine review fee based on total vehicles (only added once)
+       let reviewFee = 1000;  // Default for less than 5 vehicles
+       if (totalVehicles >= 5 && totalVehicles <= 30) {
+           reviewFee = 3000;
+       } else if (totalVehicles > 30) {
+           reviewFee = 5000;
+       }
+
+       // Calculate final total
+       totalCost = totalBeforeReviewFee + reviewFee;
+
+       // Set maxCostFactor to prevent additional fixed cost calculation at the end
+       maxCostFactor = -1;
+   }
+
+   // Waste Storage
+   else if (selectedActivity === 'wasteStorage') {
+       const capacity = parseFloat(document.getElementById('capacityStorage').value);
+       if (isNaN(capacity) || capacity <= 0) {
+           alert('يرجى إدخال سعة صالحة.');
+           return;
+       }
+
+       const selectedStorage = document.getElementById('subActivitiesStorage').value;
+       
+       // Determine risk factor based on capacity
+       maxCostFactor = capacity < 10 ? 0.8 : (capacity <= 100 ? 1.0 : 1.3);
+
+       // Calculate using the determined risk factor
+       const baseCost = selectedStorage === 'hazardousWasteStorage' ? 10000 : 7500;
+       totalCost += (baseCost * maxCostFactor) * years;
+   }
+
+   // Recycling Facilities
+   else if (selectedActivity === 'recyclingFacilities') {
+       const capitalCost = parseFloat(document.getElementById('capitalCost').value);
+       if (isNaN(capitalCost) || capitalCost <= 0) {
+           alert('يرجى إدخال التكلفة الرأسمالية الصالحة.');
+           return;
+       }
+
+       // Determine risk factor based on capital cost
+       maxCostFactor = capitalCost < 1000000 ? 0.8 : (capitalCost <= 10000000 ? 1.0 : 1.3);
+
+       // Calculate using the determined risk factor
+       totalCost += (15000 * maxCostFactor) * years;
+   }
+
+   // Final Disposal
+   else if (selectedActivity === 'finalDisposal') {
+       // Get selected activities
+       let selectedActivities = Array.from(document.getElementById('subActivitiesFinalDisposal').selectedOptions);
+       
+       // Exit if no activities selected
+       if (selectedActivities.length === 0) {
+           alert('الرجاء اختيار نشاط فرعي واحد على الأقل');
+           return;
+       }
+
+       const capacity = parseFloat(document.getElementById('capacityFinalDisposal').value);
+       if (isNaN(capacity) || capacity <= 0) {
+           alert('يرجى إدخال السعة القصوى بشكل صحيح.');
+           return;
+       }
+
+       let activityCosts = 0;
+       const baseCost = 30000;  // Base cost for all final disposal activities
+
+       // Calculate for each selected activity
+       for (let activity of selectedActivities) {
+           let costFactor = 0.8;  // Default low cost factor
+           let reviewFee = 1000;  // Default review fee for low factor
+           
+           switch(activity.value) {
+               case 'hazardousWasteDisposal':
+               case 'hazardousWasteLandfilling':
+               case 'cellClosure':
+                   // These activities share the same criteria: <10000=low, 10000-100000=medium, >100000=high
+                   if (capacity >= 10000 && capacity <= 100000) {
+                       costFactor = 1.0;
+                       reviewFee = 3000;
+                   } else if (capacity > 100000) {
+                       costFactor = 1.3;
+                       reviewFee = 5000;
+                   }
+                   break;
+
+               case 'municipalSolidWasteDisposal':
+                   // Different criteria: <100000=low, 100000-300000=medium, >300000=high
+                   if (capacity >= 100000 && capacity <= 300000) {
+                       costFactor = 1.0;
+                       reviewFee = 3000;
+                   } else if (capacity > 300000) {
+                       costFactor = 1.3;
+                       reviewFee = 5000;
+                   }
+                   break;
+
+               case 'deadAnimalIncineration':
+                   // Different criteria: <100=low, 100-500=medium, >500=high
+                   if (capacity >= 100 && capacity <= 500) {
+                       costFactor = 1.0;
+                       reviewFee = 3000;
+                   } else if (capacity > 500) {
+                       costFactor = 1.3;
+                       reviewFee = 5000;
+                   }
+                   break;
+           }
+
+           // Calculate cost for this activity
+           let activityCost = baseCost * costFactor;
+           
+           // Multiply by years if applicable
+           activityCost = activityCost * years;
+           
+           // Add review fee (only once, not multiplied by years)
+           activityCost += reviewFee;
+           
+           activityCosts += activityCost;
+       }
+
+       totalCost = activityCosts;
+       maxCostFactor = -1; // Prevent additional fixed cost
+   }
+
+   // Add fixed cost based on the highest risk factor determined
+   // Skip this for non-hazardous and hazardous waste collection as they're handled differently
+   if (selectedActivity !== 'none' && 
+       selectedActivity !== 'nonHazardousWasteCollection' && 
+       selectedActivity !== 'hazardousWasteCollection' &&
+       selectedActivity !== 'finalDisposal') {
+       let fixedCost = maxCostFactor === 0.8 ? 1000 : (maxCostFactor === 1.0 ? 3000 : 5000);
+       totalCost += fixedCost;
+   }
+
+   // Display the total cost
+   document.getElementById('totalCost').innerText = totalCost.toFixed(2);
+   document.getElementById('result').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
