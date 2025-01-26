@@ -89,6 +89,7 @@
             <option value="wasteStorage">تخزين النفايات</option>
             <option value="recyclingFacilities">منشآت إعادة التدوير</option>
             <option value="finalDisposal">التخلص النهائي</option>
+            <option value="recyclableMaterialsTrade">الفرز والتجهيز وتخزين وتجارة المواد القابلة للتدوير</option>
 
         </select>
         <!-- حقل عدد السنوات -->
@@ -136,7 +137,6 @@
             <label for="subActivitiesStorage">اختر الأنشطة الفرعية:</label>
             <select id="subActivitiesStorage" name="subActivitiesStorage">
                 <option value="hazardousWasteStorage">التخزين المؤقت للنفايات الخطرة</option>
-                <option value="recyclableWasteStorage">التخزين المؤقت للنفايات القابلة للتدوير</option>
             </select>
             <label for="capacityStorage">أدخل السعة القصوى للتخزين (طن):</label>
             <input type="number" id="capacityStorage" name="capacityStorage" min="1" placeholder="مثل 1 أو 5 أو 10">
@@ -160,6 +160,17 @@
     <label for="capacityFinalDisposal">أدخل السعة القصوى (طن/سنة أو كغ/سنة):</label>
     <input type="number" id="capacityFinalDisposal" name="capacityFinalDisposal" min="1" placeholder="مثل 10000 أو 50000 أو 50">
       </div>
+
+      <!-- Add this new div for the sub-activities -->
+<div id="recyclableMaterialsSubActivities" class="hidden">
+    <label for="subActivitiesRecyclable">اختر الأنشطة الفرعية:</label>
+    <select id="subActivitiesRecyclable" name="subActivitiesRecyclable" multiple>
+        <option value="tradingRecyclable">فرز وتجهيز وتجارة المواد القابلة للتدوير</option>
+        <option value="temporaryStorage">التخزين المؤقت للمواد القابلة للتدوير</option>
+    </select>
+    <label for="capacityRecyclable">أدخل السعة القصوى أو كمية النفايات المتداولة (طن):</label>
+    <input type="number" id="capacityRecyclable" name="capacityRecyclable" min="1" placeholder="مثل 1 أو 5 أو 10">
+</div>
 
 
         <!-- الأنشطة الفرعية لجمع ونقل النفايات الخطرة -->
@@ -199,6 +210,7 @@
         document.getElementById('wasteStorageSubActivities').classList.add('hidden');
         document.getElementById('recyclingFacilitiesInputs').classList.add('hidden');
         document.getElementById('finalDisposalSubActivities').classList.add('hidden');
+        document.getElementById('recyclableMaterialsSubActivities').classList.add('hidden');
 
         if (activity === 'wasteTreatment') {
             document.getElementById('wasteTreatmentSubActivities').classList.remove('hidden');
@@ -212,8 +224,10 @@
             document.getElementById('recyclingFacilitiesInputs').classList.remove('hidden');
         } else if (activity === 'finalDisposal') {
             document.getElementById('finalDisposalSubActivities').classList.remove('hidden');
-
         }
+        else if (activity === 'recyclableMaterialsTrade') {
+        document.getElementById('recyclableMaterialsSubActivities').classList.remove('hidden');
+    }
      }
 
     function showVehiclesField(type) {
@@ -431,6 +445,65 @@
        // Calculate using the determined risk factor
        totalCost += (15000 * maxCostFactor) * years;
    }
+   // Replace the recyclableMaterialsTrade section with this:
+else if (selectedActivity === 'recyclableMaterialsTrade') {
+    let selectedActivities = Array.from(document.getElementById('subActivitiesRecyclable').selectedOptions);
+    
+    if (selectedActivities.length === 0) {
+        alert('الرجاء اختيار نشاط فرعي واحد على الأقل');
+        return;
+    }
+
+    const capacity = parseFloat(document.getElementById('capacityRecyclable').value);
+    if (isNaN(capacity) || capacity <= 0) {
+        alert('يرجى إدخال السعة القصوى أو كمية النفايات المتداولة بشكل صحيح.');
+        return;
+    }
+
+    const baseCost = 7500;
+    let activityCosts = 0;
+    let costFactor;
+    let reviewFee;
+
+    // Calculate for each selected activity
+    for (let activity of selectedActivities) {
+        if (activity.value === 'temporaryStorage') {
+            if (capacity < 10) {
+                costFactor = 0.8;
+                reviewFee = 1000;
+            } else if (capacity <= 100) {
+                costFactor = 1.0;
+                reviewFee = 3000;
+            } else {
+                costFactor = 1.3;
+                reviewFee = 5000;
+            }
+        } else if (activity.value === 'tradingRecyclable') {
+            if (capacity < 10) {
+                costFactor = 0.8;
+                reviewFee = 1000;
+            } else if (capacity <= 50) {
+                costFactor = 1.0;
+                reviewFee = 3000;
+            } else {
+                costFactor = 1.3;
+                reviewFee = 5000;
+            }
+        }
+
+        let activityCost = baseCost * costFactor;
+        activityCosts += activityCost;
+    }
+
+    // Multiply by years before adding review fee
+    activityCosts = activityCosts * years;
+    
+    // Add review fee once
+    totalCost = activityCosts + reviewFee;
+    
+    // Prevent additional fixed cost
+    maxCostFactor = -1;
+}
 
    // Final Disposal
    else if (selectedActivity === 'finalDisposal') {
@@ -515,7 +588,8 @@
    if (selectedActivity !== 'none' && 
        selectedActivity !== 'nonHazardousWasteCollection' && 
        selectedActivity !== 'hazardousWasteCollection' &&
-       selectedActivity !== 'finalDisposal') {
+       selectedActivity !== 'finalDisposal' &&
+       selectedActivity !== 'recyclableMaterialsTrade') {
        let fixedCost = maxCostFactor === 0.8 ? 1000 : (maxCostFactor === 1.0 ? 3000 : 5000);
        totalCost += fixedCost;
    }
